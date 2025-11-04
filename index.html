@@ -1,0 +1,719 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pirate Funnel & North Star Metric Exercise</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50">
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        const PirateFunnelExercise = () => {
+            // Load saved data from localStorage on mount
+            const loadSavedData = () => {
+                try {
+                    const saved = localStorage.getItem('pirateFunnelData');
+                    if (saved) {
+                        return JSON.parse(saved);
+                    }
+                } catch (error) {
+                    console.error('Error loading saved data:', error);
+                }
+                return null;
+            };
+
+            const savedData = loadSavedData();
+
+            const [startupName, setStartupName] = useState(savedData?.startupName || '');
+            const [startupType, setStartupType] = useState(savedData?.startupType || '');
+            const [currentStep, setCurrentStep] = useState(savedData?.currentStep || 0);
+            const [funnelData, setFunnelData] = useState(savedData?.funnelData || {
+                awareness: { metrics: [], actions: '', challenges: '' },
+                acquisition: { metrics: [], actions: '', challenges: '' },
+                activation: { metrics: [], actions: '', challenges: '' },
+                retention: { metrics: [], actions: '', challenges: '' },
+                revenue: { metrics: [], actions: '', challenges: '' },
+                referral: { metrics: [], actions: '', challenges: '' }
+            });
+            const [northStar, setNorthStar] = useState(savedData?.northStar || '');
+            const [northStarReason, setNorthStarReason] = useState(savedData?.northStarReason || '');
+            const [lastSaved, setLastSaved] = useState(savedData?.lastSaved || null);
+            const [showSaveNotification, setShowSaveNotification] = useState(false);
+
+            // Auto-save to localStorage whenever data changes
+            useEffect(() => {
+                const dataToSave = {
+                    startupName,
+                    startupType,
+                    currentStep,
+                    funnelData,
+                    northStar,
+                    northStarReason,
+                    lastSaved: new Date().toISOString()
+                };
+
+                try {
+                    localStorage.setItem('pirateFunnelData', JSON.stringify(dataToSave));
+                    setLastSaved(new Date().toISOString());
+                    
+                    // Show save notification briefly
+                    setShowSaveNotification(true);
+                    const timer = setTimeout(() => setShowSaveNotification(false), 2000);
+                    return () => clearTimeout(timer);
+                } catch (error) {
+                    console.error('Error saving data:', error);
+                }
+            }, [startupName, startupType, currentStep, funnelData, northStar, northStarReason]);
+
+            const clearSavedData = () => {
+                if (confirm('Are you sure you want to clear all saved data and start over?')) {
+                    localStorage.removeItem('pirateFunnelData');
+                    window.location.reload();
+                }
+            };
+
+            const funnelStages = [
+                {
+                    id: 'awareness',
+                    title: '🏴‍☠️ Awareness',
+                    icon: '👁️',
+                    description: 'How do people discover your product?',
+                    questions: [
+                        'What channels bring visitors to your product?',
+                        'How do people first hear about you?',
+                        'What marketing activities drive awareness?'
+                    ],
+                    exampleMetrics: [
+                        'Website visitors',
+                        'Social media impressions',
+                        'Blog post views',
+                        'Ad impressions',
+                        'PR mentions',
+                        'Search rankings'
+                    ],
+                    exampleActions: 'SEO optimization, content marketing, paid advertising, social media campaigns, PR outreach'
+                },
+                {
+                    id: 'acquisition',
+                    title: '⚓ Acquisition',
+                    icon: '🎯',
+                    description: 'How do you capture interest and collect contact info?',
+                    questions: [
+                        'What makes someone sign up or express interest?',
+                        'What information do you collect?',
+                        'What is your conversion rate from visitor to lead?'
+                    ],
+                    exampleMetrics: [
+                        'Sign-ups',
+                        'Email subscribers',
+                        'Free trial starts',
+                        'Demo requests',
+                        'App downloads',
+                        'Landing page conversions'
+                    ],
+                    exampleActions: 'Optimize landing pages, improve CTAs, A/B testing, lead magnets, free trials, demo offers'
+                },
+                {
+                    id: 'activation',
+                    title: '⚡ Activation',
+                    icon: '✨',
+                    description: 'What is the "aha moment" for your users?',
+                    questions: [
+                        'What first action shows real value?',
+                        'When does a user experience their first success?',
+                        'What % of sign-ups reach this moment?'
+                    ],
+                    exampleMetrics: [
+                        'Users completing onboarding',
+                        'First core action completed',
+                        'Time to first value',
+                        'Profile completion rate',
+                        'First purchase/transaction',
+                        'Feature adoption rate'
+                    ],
+                    exampleActions: 'Streamline onboarding, user tutorials, progress indicators, personalized setup, quick wins'
+                },
+                {
+                    id: 'retention',
+                    title: '🔄 Retention',
+                    icon: '💙',
+                    description: 'How do you keep users coming back?',
+                    questions: [
+                        'How often do users return?',
+                        'What drives repeat usage?',
+                        'What is your churn rate?'
+                    ],
+                    exampleMetrics: [
+                        'Daily/Weekly/Monthly active users',
+                        'Churn rate',
+                        'Session frequency',
+                        'Feature usage over time',
+                        'Customer lifetime',
+                        'Engagement score'
+                    ],
+                    exampleActions: 'Email reminders, push notifications, new features, community building, habit formation, value reinforcement'
+                },
+                {
+                    id: 'revenue',
+                    title: '💰 Revenue',
+                    icon: '💵',
+                    description: 'How do you monetize your users?',
+                    questions: [
+                        'What is your business model?',
+                        'How much does each customer pay?',
+                        'What drives upgrade/purchase decisions?'
+                    ],
+                    exampleMetrics: [
+                        'Monthly/Annual recurring revenue',
+                        'Average revenue per user (ARPU)',
+                        'Conversion to paid',
+                        'Lifetime value (LTV)',
+                        'Payment frequency',
+                        'Upgrade rate'
+                    ],
+                    exampleActions: 'Pricing optimization, upsells, cross-sells, premium features, usage-based pricing, annual plans'
+                },
+                {
+                    id: 'referral',
+                    title: '📣 Referral',
+                    icon: '🚀',
+                    description: 'How do users spread the word?',
+                    questions: [
+                        'Do users recommend your product?',
+                        'What incentivizes referrals?',
+                        'What is your viral coefficient?'
+                    ],
+                    exampleMetrics: [
+                        'Net Promoter Score (NPS)',
+                        'Referral rate',
+                        'Viral coefficient',
+                        'Social shares',
+                        'Invite acceptance rate',
+                        'Word-of-mouth signups'
+                    ],
+                    exampleActions: 'Referral programs, social sharing features, incentives, testimonials, case studies, community advocacy'
+                }
+            ];
+
+            const northStarExamples = [
+                { type: 'SaaS', metric: 'Weekly Active Teams', why: 'Measures core product engagement and collaboration' },
+                { type: 'E-commerce', metric: 'Number of Orders per Month', why: 'Directly ties to revenue and customer satisfaction' },
+                { type: 'Social Media', metric: 'Daily Active Users', why: 'Indicates network effects and stickiness' },
+                { type: 'Marketplace', metric: 'Successful Transactions', why: 'Represents value creation for both sides' },
+                { type: 'Streaming', metric: 'Hours of Content Consumed', why: 'Shows engagement and content value' },
+                { type: 'EdTech', metric: 'Courses Completed', why: 'Measures learning outcomes and success' }
+            ];
+
+            const handleMetricToggle = (stage, metric) => {
+                const currentMetrics = funnelData[stage].metrics;
+                const newMetrics = currentMetrics.includes(metric)
+                    ? currentMetrics.filter(m => m !== metric)
+                    : [...currentMetrics, metric];
+                
+                setFunnelData({
+                    ...funnelData,
+                    [stage]: { ...funnelData[stage], metrics: newMetrics }
+                });
+            };
+
+            const handleInputChange = (stage, field, value) => {
+                setFunnelData({
+                    ...funnelData,
+                    [stage]: { ...funnelData[stage], [field]: value }
+                });
+            };
+
+            const exportResults = () => {
+                const results = {
+                    startupName,
+                    startupType,
+                    funnelAnalysis: funnelData,
+                    northStarMetric: northStar,
+                    northStarReason,
+                    completedAt: new Date().toISOString(),
+                    completedDate: new Date().toLocaleDateString(),
+                    completedTime: new Date().toLocaleTimeString()
+                };
+                
+                const textReport = `
+PIRATE FUNNEL ANALYSIS - ${startupName}
+${'='.repeat(60)}
+Startup Type: ${startupType}
+Completed: ${results.completedDate} at ${results.completedTime}
+
+${funnelStages.map(stage => `
+${stage.title}
+${'-'.repeat(60)}
+Metrics: ${funnelData[stage.id].metrics.join(', ') || 'Not specified'}
+Actions: ${funnelData[stage.id].actions || 'Not specified'}
+Challenges: ${funnelData[stage.id].challenges || 'Not specified'}
+`).join('\n')}
+
+NORTH STAR METRIC
+${'-'.repeat(60)}
+Metric: ${northStar}
+Reasoning: ${northStarReason}
+
+${'='.repeat(60)}
+Generated by Pirate Funnel Exercise Tool
+                `.trim();
+                
+                // Export as text file
+                const blob = new Blob([textReport], { type: 'text/plain' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `${startupName.replace(/\s+/g, '-')}-pirate-funnel-${Date.now()}.txt`;
+                a.click();
+                
+                // Also save JSON version
+                const jsonBlob = new Blob([JSON.stringify(results, null, 2)], { type: 'application/json' });
+                const jsonUrl = URL.createObjectURL(jsonBlob);
+                const jsonA = document.createElement('a');
+                jsonA.href = jsonUrl;
+                jsonA.download = `${startupName.replace(/\s+/g, '-')}-pirate-funnel-${Date.now()}.json`;
+                jsonA.click();
+            };
+
+            const printResults = () => {
+                window.print();
+            };
+
+            const currentStageData = funnelStages[currentStep];
+
+            return (
+                <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-8 px-4">
+                    <div className="max-w-4xl mx-auto">
+                        {/* Header */}
+                        <div className="bg-white rounded-lg shadow-lg p-8 mb-6">
+                            <div className="flex items-center justify-between mb-4">
+                                <h1 className="text-4xl font-bold text-gray-800">
+                                    🏴‍☠️ Pirate Funnel Exercise
+                                </h1>
+                                <div className="flex items-center gap-3">
+                                    {/* Save Notification */}
+                                    {showSaveNotification && (
+                                        <div className="flex items-center gap-2 text-green-600 text-sm animate-pulse">
+                                            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                                            </svg>
+                                            Saved
+                                        </div>
+                                    )}
+                                    {lastSaved && !showSaveNotification && (
+                                        <div className="text-xs text-gray-500">
+                                            Last saved: {new Date(lastSaved).toLocaleTimeString()}
+                                        </div>
+                                    )}
+                                    <div className="text-sm text-gray-600">
+                                        AARRR Framework
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="flex items-center justify-between mb-6">
+                                <p className="text-gray-600">
+                                    Map your startup's customer journey and identify your North Star Metric
+                                </p>
+                                <button
+                                    onClick={clearSavedData}
+                                    className="text-sm text-red-600 hover:text-red-700 underline"
+                                >
+                                    Clear & Start Over
+                                </button>
+                            </div>
+                            
+                            {/* Auto-save Notice */}
+                            <div className="bg-blue-50 border-l-4 border-blue-500 p-4 rounded">
+                                <div className="flex items-center gap-2">
+                                    <svg className="w-5 h-5 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                                    </svg>
+                                    <span className="text-sm text-blue-700">
+                                        <strong>Auto-save enabled:</strong> Your progress is automatically saved to your browser. You can close this page and return anytime!
+                                    </span>
+                                </div>
+                            </div>
+
+                            {/* Startup Info */}
+                            {currentStep === 0 && (
+                                <div className="space-y-4">
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                                            Your Startup Name
+                                        </label>
+                                        <input
+                                            type="text"
+                                            value={startupName}
+                                            onChange={(e) => setStartupName(e.target.value)}
+                                            placeholder="e.g., TaskMaster Pro"
+                                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                                            Startup Type / Industry
+                                        </label>
+                                        <input
+                                            type="text"
+                                            value={startupType}
+                                            onChange={(e) => setStartupType(e.target.value)}
+                                            placeholder="e.g., SaaS, E-commerce, Marketplace, Social Media"
+                                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                        />
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Progress Bar */}
+                        <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
+                            <div className="flex justify-between items-center mb-2">
+                                <span className="text-sm font-medium text-gray-700">Progress</span>
+                                <span className="text-sm text-gray-600">
+                                    Step {currentStep + 1} of {funnelStages.length + 1}
+                                </span>
+                            </div>
+                            <div className="w-full bg-gray-200 rounded-full h-2">
+                                <div
+                                    className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                                    style={{ width: `${((currentStep + 1) / (funnelStages.length + 1)) * 100}%` }}
+                                ></div>
+                            </div>
+                            <div className="flex justify-between mt-4 text-xs">
+                                <span className={currentStep >= 0 ? 'text-blue-600 font-medium' : 'text-gray-400'}>👁️ Awareness</span>
+                                <span className={currentStep >= 1 ? 'text-blue-600 font-medium' : 'text-gray-400'}>🎯 Acquisition</span>
+                                <span className={currentStep >= 2 ? 'text-blue-600 font-medium' : 'text-gray-400'}>✨ Activation</span>
+                                <span className={currentStep >= 3 ? 'text-blue-600 font-medium' : 'text-gray-400'}>💙 Retention</span>
+                                <span className={currentStep >= 4 ? 'text-blue-600 font-medium' : 'text-gray-400'}>💵 Revenue</span>
+                                <span className={currentStep >= 5 ? 'text-blue-600 font-medium' : 'text-gray-400'}>🚀 Referral</span>
+                                <span className={currentStep >= 6 ? 'text-blue-600 font-medium' : 'text-gray-400'}>⭐ North Star</span>
+                            </div>
+                        </div>
+
+                        {/* Main Content */}
+                        {currentStep < funnelStages.length ? (
+                            <div className="bg-white rounded-lg shadow-lg p-8">
+                                <div className="mb-6">
+                                    <div className="flex items-center gap-3 mb-4">
+                                        <span className="text-5xl">{currentStageData.icon}</span>
+                                        <h2 className="text-3xl font-bold text-gray-800">
+                                            {currentStageData.title}
+                                        </h2>
+                                    </div>
+                                    <p className="text-lg text-gray-600 mb-6">
+                                        {currentStageData.description}
+                                    </p>
+
+                                    {/* Guiding Questions */}
+                                    <div className="bg-blue-50 rounded-lg p-6 mb-6">
+                                        <h3 className="font-semibold text-gray-800 mb-3">💭 Think About:</h3>
+                                        <ul className="space-y-2">
+                                            {currentStageData.questions.map((q, idx) => (
+                                                <li key={idx} className="text-gray-700">
+                                                    • {q}
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    </div>
+
+                                    {/* Metric Selection */}
+                                    <div className="mb-6">
+                                        <h3 className="font-semibold text-gray-800 mb-3">
+                                            📊 Select Your Key Metrics (choose 2-4):
+                                        </h3>
+                                        <div className="grid grid-cols-2 gap-3">
+                                            {currentStageData.exampleMetrics.map((metric, idx) => (
+                                                <button
+                                                    key={idx}
+                                                    onClick={() => handleMetricToggle(currentStageData.id, metric)}
+                                                    className={`p-3 rounded-lg border-2 text-left transition-all ${
+                                                        funnelData[currentStageData.id].metrics.includes(metric)
+                                                            ? 'border-blue-600 bg-blue-50 text-blue-700 font-medium'
+                                                            : 'border-gray-200 hover:border-gray-300'
+                                                    }`}
+                                                >
+                                                    <span className="mr-2">
+                                                        {funnelData[currentStageData.id].metrics.includes(metric) ? '✓' : '○'}
+                                                    </span>
+                                                    {metric}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
+
+                                    {/* Actions to Optimize */}
+                                    <div className="mb-6">
+                                        <h3 className="font-semibold text-gray-800 mb-3">
+                                            🎯 What actions will you take to optimize this stage?
+                                        </h3>
+                                        <p className="text-sm text-gray-500 mb-2">
+                                            Example: {currentStageData.exampleActions}
+                                        </p>
+                                        <textarea
+                                            value={funnelData[currentStageData.id].actions}
+                                            onChange={(e) => handleInputChange(currentStageData.id, 'actions', e.target.value)}
+                                            placeholder="Describe your strategy and tactics..."
+                                            rows="4"
+                                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                        />
+                                    </div>
+
+                                    {/* Challenges */}
+                                    <div className="mb-6">
+                                        <h3 className="font-semibold text-gray-800 mb-3">
+                                            ⚠️ What challenges do you anticipate at this stage?
+                                        </h3>
+                                        <textarea
+                                            value={funnelData[currentStageData.id].challenges}
+                                            onChange={(e) => handleInputChange(currentStageData.id, 'challenges', e.target.value)}
+                                            placeholder="Identify potential bottlenecks and risks..."
+                                            rows="3"
+                                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+                        ) : (
+                            /* North Star Metric Selection */
+                            <div className="bg-white rounded-lg shadow-lg p-8">
+                                <div className="mb-6">
+                                    <div className="flex items-center gap-3 mb-4">
+                                        <span className="text-5xl">⭐</span>
+                                        <h2 className="text-3xl font-bold text-gray-800">
+                                            Your North Star Metric
+                                        </h2>
+                                    </div>
+                                    <p className="text-lg text-gray-600 mb-6">
+                                        The ONE metric that best captures the core value you deliver to customers
+                                    </p>
+
+                                    {/* What is a North Star Metric */}
+                                    <div className="bg-yellow-50 border-l-4 border-yellow-500 rounded-lg p-6 mb-6">
+                                        <h3 className="font-semibold text-gray-800 mb-3">🌟 What Makes a Good North Star Metric?</h3>
+                                        <ul className="space-y-2 text-gray-700">
+                                            <li>✓ Captures the core value you deliver to customers</li>
+                                            <li>✓ Leads to revenue (even if it's not revenue itself)</li>
+                                            <li>✓ Reflects customer success and satisfaction</li>
+                                            <li>✓ Measurable and trackable</li>
+                                            <li>✓ The whole team can influence it</li>
+                                        </ul>
+                                    </div>
+
+                                    {/* Examples */}
+                                    <div className="bg-blue-50 rounded-lg p-6 mb-6">
+                                        <h3 className="font-semibold text-gray-800 mb-3">💡 Examples by Industry:</h3>
+                                        <div className="space-y-3">
+                                            {northStarExamples.map((example, idx) => (
+                                                <div key={idx} className="bg-white rounded-lg p-4">
+                                                    <div className="flex justify-between items-start mb-2">
+                                                        <span className="font-medium text-blue-600">{example.type}</span>
+                                                        <span className="text-sm text-gray-500">e.g.</span>
+                                                    </div>
+                                                    <div className="font-semibold text-gray-800 mb-1">
+                                                        {example.metric}
+                                                    </div>
+                                                    <div className="text-sm text-gray-600">
+                                                        Why? {example.why}
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+
+                                    {/* Your North Star Metric */}
+                                    <div className="mb-6">
+                                        <h3 className="font-semibold text-gray-800 mb-3">
+                                            ⭐ Define Your North Star Metric:
+                                        </h3>
+                                        <input
+                                            type="text"
+                                            value={northStar}
+                                            onChange={(e) => setNorthStar(e.target.value)}
+                                            placeholder="e.g., Weekly Active Projects Created"
+                                            className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg text-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                        />
+                                    </div>
+
+                                    {/* Why This Metric */}
+                                    <div className="mb-6">
+                                        <h3 className="font-semibold text-gray-800 mb-3">
+                                            🤔 Why is this your North Star? How does it capture customer value?
+                                        </h3>
+                                        <textarea
+                                            value={northStarReason}
+                                            onChange={(e) => setNorthStarReason(e.target.value)}
+                                            placeholder="Explain how this metric represents the core value you deliver..."
+                                            rows="5"
+                                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                        />
+                                    </div>
+
+                                    {/* Connection to Funnel */}
+                                    <div className="bg-green-50 rounded-lg p-6">
+                                        <h3 className="font-semibold text-gray-800 mb-3">
+                                            🔗 Connect to Your Funnel:
+                                        </h3>
+                                        <p className="text-gray-700 mb-3">
+                                            Which stage of your funnel most directly impacts your North Star Metric?
+                                        </p>
+                                        <div className="text-sm text-gray-600">
+                                            Think about: If you had to focus on ONE stage to improve your North Star Metric, which would it be and why?
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Navigation */}
+                        <div className="flex justify-between mt-6">
+                            <button
+                                onClick={() => setCurrentStep(Math.max(0, currentStep - 1))}
+                                disabled={currentStep === 0}
+                                className={`px-6 py-3 rounded-lg font-medium ${
+                                    currentStep === 0
+                                        ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                                        : 'bg-white text-gray-700 hover:bg-gray-50 shadow'
+                                }`}
+                            >
+                                ← Previous
+                            </button>
+
+                            {currentStep < funnelStages.length ? (
+                                <button
+                                    onClick={() => setCurrentStep(currentStep + 1)}
+                                    className="px-6 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 shadow-lg"
+                                >
+                                    Next →
+                                </button>
+                            ) : (
+                                <div className="flex gap-3">
+                                    <button
+                                        onClick={exportResults}
+                                        className="px-6 py-3 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 shadow-lg flex items-center gap-2"
+                                    >
+                                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                                        </svg>
+                                        Download Results
+                                    </button>
+                                    <button
+                                        onClick={printResults}
+                                        className="px-6 py-3 bg-purple-600 text-white rounded-lg font-medium hover:bg-purple-700 shadow-lg flex items-center gap-2"
+                                    >
+                                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                                        </svg>
+                                        Print
+                                    </button>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Summary View (when completed) */}
+                        {currentStep === funnelStages.length && northStar && (
+                            <div className="mt-8 bg-white rounded-lg shadow-lg p-8 print:block">
+                                <h2 className="text-2xl font-bold text-gray-800 mb-6">
+                                    📋 Your Pirate Funnel Summary
+                                </h2>
+                                
+                                <div className="mb-6 pb-6 border-b">
+                                    <h3 className="text-xl font-semibold text-gray-800 mb-2">{startupName}</h3>
+                                    <p className="text-gray-600">{startupType}</p>
+                                </div>
+
+                                {funnelStages.map((stage, idx) => (
+                                    <div key={stage.id} className="mb-6 pb-6 border-b last:border-b-0">
+                                        <h3 className="text-lg font-semibold text-gray-800 mb-3 flex items-center gap-2">
+                                            <span>{stage.icon}</span>
+                                            {stage.title}
+                                        </h3>
+                                        <div className="ml-8">
+                                            <div className="mb-3">
+                                                <span className="font-medium text-gray-700">Metrics: </span>
+                                                <span className="text-gray-600">
+                                                    {funnelData[stage.id].metrics.join(', ') || 'Not specified'}
+                                                </span>
+                                            </div>
+                                            {funnelData[stage.id].actions && (
+                                                <div className="mb-3">
+                                                    <span className="font-medium text-gray-700">Actions: </span>
+                                                    <span className="text-gray-600">{funnelData[stage.id].actions}</span>
+                                                </div>
+                                            )}
+                                            {funnelData[stage.id].challenges && (
+                                                <div>
+                                                    <span className="font-medium text-gray-700">Challenges: </span>
+                                                    <span className="text-gray-600">{funnelData[stage.id].challenges}</span>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                ))}
+
+                                <div className="mt-8 bg-yellow-50 rounded-lg p-6">
+                                    <h3 className="text-xl font-semibold text-gray-800 mb-3 flex items-center gap-2">
+                                        <span>⭐</span>
+                                        North Star Metric
+                                    </h3>
+                                    <div className="ml-8">
+                                        <div className="text-2xl font-bold text-blue-600 mb-3">
+                                            {northStar}
+                                        </div>
+                                        <p className="text-gray-700">
+                                            {northStarReason}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+
+                    <style>
+                        {`
+                        @media print {
+                            body {
+                                background: white;
+                            }
+                            .no-print {
+                                display: none !important;
+                            }
+                        }
+                        `}
+                    </style>
+
+                    {/* Footer with GitHub Instructions */}
+                    <div className="mt-12 bg-white rounded-lg shadow-lg p-6 text-center">
+                        <h3 className="font-semibold text-gray-800 mb-3">💡 Using This Tool</h3>
+                        <div className="text-sm text-gray-600 space-y-2">
+                            <p>
+                                <strong>Auto-Save:</strong> All your progress is automatically saved in your browser's local storage.
+                            </p>
+                            <p>
+                                <strong>Privacy:</strong> Your data stays on YOUR device - nothing is sent to any server.
+                            </p>
+                            <p>
+                                <strong>Multiple Devices:</strong> If you switch devices or browsers, your progress won't transfer. Export your work before switching!
+                            </p>
+                            <p>
+                                <strong>Hosting on GitHub Pages:</strong> This tool works perfectly when hosted on GitHub Pages - students can access it anytime and their progress will be saved locally.
+                            </p>
+                        </div>
+                        <div className="mt-4 pt-4 border-t border-gray-200 text-xs text-gray-500">
+                            <p>Built with React • Data stored in browser localStorage • Works offline after first load</p>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        ReactDOM.render(<PirateFunnelExercise />, document.getElementById('root'));
+    </script>
+</body>
+</html>
